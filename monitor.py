@@ -1,43 +1,42 @@
 import logging
-import os
 import sys
 
 from trillian import TrillianLog
+from print_helper import Print
+from pprint import pprint
 
 
 def main(argv):
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
-    trillian_log = TrillianLog(**load_log_settings())
+    trillian_log = TrillianLog.load_from_environment()
+
+    Print.status('Checking signature on signed log root')
 
     validated_log_root = trillian_log.get_log_root()
 
+    Print.tick('Log root is signed correctly by public key')
+
+    # * do full audit between hash[previous] and hash[current]
+    # * do consistency check between hash[previous] and hash[current]
+
+    Print.status('Rebuilding Merkle tree from {} entries to get root '
+                 'hash'.format(validated_log_root.tree_size))
+
+    Print.bullet('Looking for root hash: {}'.format(
+        validated_log_root.root_hash))
+
     if trillian_log.full_audit(validated_log_root):
-        print("Validated log root against all leaf data: {}".format(
-            validated_log_root)
-        )
+        Print.bullet('Calculated root hash:  {}'.format(
+            validated_log_root.root_hash))
 
+        Print.tick('Root hashes match, Merkle tree appears correct')
 
-def load_log_settings():
-    url = os.environ.get('TRILLIAN_LOG_URL', None)
-    if not url:
-        raise RuntimeError(
-            'No TRILLIAN_LOG_URL found in `settings.sh`. It should look like '
-            'http://<host>:<post>/v1beta1/logs/<log_id>. On the demo log '
-            'server, see http://192.168.99.4:5000/demoapi/logs/ to '
-            'and look for the `log_url` field'
-        )
+    Print.status('Showing latest log entry')
 
-    public_key = os.environ.get('TRILLIAN_LOG_PUBLIC_KEY', None)
+    Print.normal(str(trillian_log.latest().json()))
 
-    if not public_key:
-        raise RuntimeError(
-            'No TRILLIAN_LOG_PUBLIC_KEY found in `settings.sh`. On the demo log '
-            'server, see http://192.168.99.4:5000/demoapi/logs/ to '
-            'and look for the `public_key` field'
-        )
-
-    return {'base_url': url, 'public_key': public_key}
+    print()
 
 
 if __name__ == '__main__':
