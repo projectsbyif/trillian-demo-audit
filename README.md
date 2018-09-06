@@ -1,4 +1,4 @@
-# Trillian Demo: Monitor
+# Trillian Demo: Audit
 
 This demo complements the [traffic data publisher example](https://github.com/projectsbyif/trillian-demo-publish) by validating the signed log root published by the log and running a full audit on the contents of a log. This involves rebuilding the log, recalculating the log root, and comparing it against the signed log root.
 
